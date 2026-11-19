@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>VFS Global — Rendezvous 2026 | The Cosmic Sphere Photobooth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=20" />
+</head>
+
+<body>
+  <!-- Ambient Cosmic Sphere Background Glows -->
+  <div class="ambient-glow glow-cosmic-blue"></div>
+  <div class="ambient-glow glow-cosmic-purple"></div>
+  <div class="ambient-glow glow-cosmic-gold"></div>
+  <div class="hud-grid-overlay"></div>
+
+  <div class="container">
+
+    <!-- Fullscreen Toggle Button -->
+    <button id="btn-fullscreen" class="btn-fullscreen" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+      <svg class="fullscreen-icon expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <polyline points="9 21 3 21 3 15"></polyline>
+        <line x1="21" y1="3" x2="14" y2="10"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+      <svg class="fullscreen-icon compress-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="4 14 10 14 10 20"></polyline>
+        <polyline points="20 10 14 10 14 4"></polyline>
+        <line x1="14" y1="10" x2="21" y2="3"></line>
+        <line x1="10" y1="14" x2="3" y2="21"></line>
+      </svg>
+    </button>
+
+    <!-- Top VFS Global — Rendezvous 2026: The Cosmic Sphere Header -->
+    <header class="header" id="main-header">
+      <div class="vfs-header-banner" id="brand-logo-home" title="Return to Gender Selection">
+        <div class="vfs-logo-group">
+          <div class="vfs-circle-mark" aria-hidden="true">
+            <span class="vfs-script">vfs.</span>
+            <span class="vfs-25">25</span>
+          </div>
+          <div class="vfs-wordmark">
+            <span class="vfs-tagline">Years of Trusted Mobility</span>
+            <span class="vfs-domain">VFS.GLOBAL</span>
+          </div>
+        </div>
+
+        <div class="vfs-header-divider" aria-hidden="true"></div>
+
+        <div class="vfs-event-group">
+          <div class="vfs-event-title">
+            RENDEZV<span class="vfs-star-o">O</span>US <span class="vfs-year">2026</span>
+          </div>
+          <div class="vfs-event-subtitle">THE COSMIC SPHERE</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== STEP 1: GENDER SELECTION PAGE ==================== -->
+    <section class="panel" id="panel-gender">
+      <div class="section-block">
+        <div class="section-header-center">
+          <h2>Select Your Gender</h2>
+          <p class="section-subtitle">Choose a category to browse your cosmic astronaut characters</p>
+        </div>
+
+        <div class="gender-cards-grid">
+          <button type="button" class="style-card gender-card" data-select-gender="male">
+            <img id="gender-preview-male" src="/VFS/Male_1.jpeg" alt="Male Cosmic Explorer" />
+            <div class="gender-card-label">MALE &rarr;</div>
+          </button>
+
+          <button type="button" class="style-card gender-card" data-select-gender="female">
+            <img id="gender-preview-female" src="/VFS/Female_1.jpeg" alt="Female Cosmic Explorer" />
+            <div class="gender-card-label">FEMALE &rarr;</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 2: CHARACTER SELECTION PAGE ==================== -->
+    <section class="panel hidden" id="panel-character">
+      <div class="section-block">
+        <div class="section-header-row">
+          <div>
+            <h2>Choose Your Cosmic Character</h2>
+          </div>
+          <button type="button" class="btn-back btn-compact" id="btn-back-to-gender">
+            &larr; Change Gender
+          </button>
+        </div>
+
+        <div class="styles-grid" id="character-grid">
+          <!-- Populated dynamically from /api/config VFS templates -->
+        </div>
+
+        <div class="panel-action-bar">
+          <button type="button" class="btn-back" id="btn-char-back">
+            &larr; Back
+          </button>
+          <button type="button" class="btn-next" id="btn-char-continue" disabled>
+            CONTINUE TO CAMERA &rarr;
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 3: CAMERA CAPTURE PAGE ==================== -->
+    <section class="panel hidden" id="panel-camera">
+      <div class="camera-step-header">
+        <h2 class="step-title">Position Your Face in the Frame</h2>
+
+        <!-- Selected Character Summary Pill -->
+        <div class="selected-template-bar" id="selected-template-bar">
+          <img id="selected-template-thumb" src="/VFS/Male_1.jpeg" alt="Selected Character" />
+          <div class="selected-template-meta">
+            <span class="meta-badge" id="selected-template-gender">MALE CHARACTER</span>
+            <strong id="selected-template-title">Solar Flare Explorer</strong>
+          </div>
+          <button type="button" class="btn-change-char" id="btn-change-char">
+            CHANGE
+          </button>
+        </div>
+      </div>
+
+      <div class="camera-container">
+        <video id="camera-video" autoplay playsinline muted></video>
+        <canvas id="camera-canvas" class="hidden"></canvas>
+        <img id="camera-preview" class="hidden" alt="Captured selfie" />
+
+        <!-- HUD Target Reticle Overlay -->
+        <div class="camera-hud-corners">
+          <span class="hud-corner tl"></span>
+          <span class="hud-corner tr"></span>
+          <span class="hud-corner bl"></span>
+          <span class="hud-corner br"></span>
+        </div>
+
+        <!-- Countdown Overlay -->
+        <div id="countdown-overlay" class="countdown-overlay hidden">3</div>
+      </div>
+
+      <div id="camera-error" class="camera-error hidden"></div>
+
+      <!-- Camera Controls -->
+      <div class="camera-buttons">
+        <button class="btn-back" id="btn-camera-back" type="button">
+          &larr; CHARACTERS
+        </button>
+        <button class="btn-timer" id="btn-timer" type="button" title="3-Second Countdown">
+          3s TIMER
+        </button>
+        <button class="btn-click" id="btn-capture" type="button">
+          <span class="cam-dot"></span> CLICK
+        </button>
+        <label class="btn-upload" id="btn-upload-label" for="file-upload-input" title="Upload Photo">
+          UPLOAD PHOTO
+          <input type="file" id="file-upload-input" accept="image/*" class="hidden" />
+        </label>
+        <button class="btn-retake hidden" id="btn-retake" type="button">
+          &#x21BA; RETAKE
+        </button>
+        <button class="btn-submit hidden" id="btn-generate" type="button" disabled>
+          LAUNCH COSMIC PORTRAIT &rarr;
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 4: RESULT (QR + PRINT + DOWNLOAD) ==================== -->
+    <section class="panel hidden" id="panel-result">
+      <!-- Loading View -->
+      <div id="loading-view" class="loading-card hidden">
+        <div class="gaming-spinner-wrap">
+          <div class="spinner-outer"></div>
+          <div class="spinner-inner"></div>
+          <svg class="spinner-hero-icon" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+            <circle cx="32" cy="32" r="14" stroke="#e5b869" stroke-width="2.6" fill="rgba(229, 184, 105, 0.14)" />
+            <ellipse cx="32" cy="32" rx="28" ry="10" transform="rotate(-22 32 32)" stroke="#38bdf8" stroke-width="2.4" />
+            <circle cx="48" cy="15" r="3" fill="#e5b869" />
+          </svg>
+        </div>
+        <h3 class="loading-title">Launching Into The Cosmic Sphere...</h3>
+        <p class="loading-sub" id="loading-sub">Crafting your personalized VFS Rendezvous 2026 portrait</p>
+      </div>
+
+      <!-- Error View -->
+      <div id="error-view" class="error-card hidden">
+        <div class="error-icon">!</div>
+        <h3>Generation Encountered an Issue</h3>
+        <p class="error-msg" id="error-msg"></p>
+        <div class="nav-buttons">
+          <button class="btn-back" id="btn-error-back" type="button">&larr; Back to Camera</button>
+          <button class="btn-submit" id="btn-error-retry" type="button">Try Again</button>
+        </div>
+      </div>
+
+      <!-- Final Result View (QR Code + Print + Download) -->
+      <div id="result-view" class="result-view hidden">
+        <div class="result-main-layout">
+          <!-- Generated Cosmic Avatar Poster -->
+          <div class="result-poster-col">
+            <div class="result-frame">
+              <img id="result-image" src="" alt="Generated VFS Cosmic Portrait" />
+            </div>
+          </div>
+
+          <!-- QR Code, Print & Download -->
+          <div class="result-side-col">
+            <div class="qr-card" id="qr-card">
+              <span class="qr-badge">RENDEZVOUS 2026 • THE COSMIC SPHERE</span>
+              <h3 class="qr-heading">Scan to Download Your Cosmic Portrait</h3>
+
+              <div class="qr-frame" id="qr-frame">
+                <img id="result-qr-image" src="" alt="Scan QR Code to Download" />
+              </div>
+
+              <div class="qr-action-buttons">
+                <button class="btn-print" id="btn-print" type="button">
+                  &#x1F5A8; PRINT PHOTO
+                </button>
+                <button class="btn-download" id="btn-download" type="button">
+                  &#x2B07; DOWNLOAD
+                </button>
+              </div>
+            </div>
+
+            <!-- Start Over (New User -> Back to Gender Page) -->
+            <button class="btn-start-over" id="btn-start-over" type="button">
+              RESTART
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="app.js?v=21"></script>
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "superhero-ai-photobooth",
+  "version": "1.0.0",
+  "description": "AI Superhero Photobooth (Male & Female) powered by gpt-image-2.5-flare",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cloudinary": "^2.11.0",
+    "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "openai": "^6.49.0",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.33.5"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

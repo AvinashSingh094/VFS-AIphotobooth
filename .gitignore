@@ -1,0 +1,11 @@
+node_modules/
+.env
+.DS_Store
+
+# Legacy unused root assets
+A.png
+B.png
+C (1).png
+Male_*.jpg
+Female_*.jpg
+generate_styles.js
