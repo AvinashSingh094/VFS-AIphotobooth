@@ -41,7 +41,7 @@ const TEMPLATE_META = {
     title: "Deep Space Voyager",
     subtitle: "Cobalt-Blue Suit • Sapphire Ringed Planet",
     badge: "CHARACTER 01",
-    cropHeight: 1516,
+    cropHeight: 1524,
   },
   "4.png": {
     id: "4.png",
@@ -49,7 +49,7 @@ const TEMPLATE_META = {
     title: "Solar Flare Explorer",
     subtitle: "Crimson-Orange Suit • Ringed Red Giant",
     badge: "CHARACTER 02",
-    cropHeight: 1516,
+    cropHeight: 1524,
   },
   "1.png": {
     id: "1.png",
@@ -57,7 +57,7 @@ const TEMPLATE_META = {
     title: "Aurora Cosmos Navigator",
     subtitle: "Emerald-Green Suit • Aurora Moonscape",
     badge: "CHARACTER 01",
-    cropHeight: 1516,
+    cropHeight: 1524,
   },
   "2.png": {
     id: "2.png",
@@ -65,7 +65,7 @@ const TEMPLATE_META = {
     title: "Nebula Galaxy Pioneer",
     subtitle: "Violet-Purple Suit • Spiral Cosmic Galaxy",
     badge: "CHARACTER 02",
-    cropHeight: 1516,
+    cropHeight: 1524,
   },
 };
 
@@ -342,7 +342,7 @@ SEAMLESS LIGHTING & ANATOMY INTEGRITY:
     }
 
     // Resize to exact 1024x1536 (4x6 print ratio) and composite crisp official VFS Rendezvous 2026 white footer banner
-    const BANNER_HEIGHT = 242;
+    const BANNER_HEIGHT = 236;
     const ART_HEIGHT = 1536 - BANNER_HEIGHT;
     let finalPipeline = sharp(generatedBuffer).resize(1024, 1536, {
       fit: "cover",
