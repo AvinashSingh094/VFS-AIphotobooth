@@ -41,7 +41,7 @@ const TEMPLATE_META = {
     title: "Deep Space Voyager",
     subtitle: "Cobalt-Blue Suit • Sapphire Ringed Planet",
     badge: "CHARACTER 01",
-    cropHeight: 1524,
+    cropHeight: 1546,
   },
   "4.png": {
     id: "4.png",
@@ -49,7 +49,7 @@ const TEMPLATE_META = {
     title: "Solar Flare Explorer",
     subtitle: "Crimson-Orange Suit • Ringed Red Giant",
     badge: "CHARACTER 02",
-    cropHeight: 1524,
+    cropHeight: 1546,
   },
   "1.png": {
     id: "1.png",
@@ -57,7 +57,7 @@ const TEMPLATE_META = {
     title: "Aurora Cosmos Navigator",
     subtitle: "Emerald-Green Suit • Aurora Moonscape",
     badge: "CHARACTER 01",
-    cropHeight: 1524,
+    cropHeight: 1546,
   },
   "2.png": {
     id: "2.png",
@@ -65,7 +65,7 @@ const TEMPLATE_META = {
     title: "Nebula Galaxy Pioneer",
     subtitle: "Violet-Purple Suit • Spiral Cosmic Galaxy",
     badge: "CHARACTER 02",
-    cropHeight: 1524,
+    cropHeight: 1546,
   },
 };
 
@@ -100,17 +100,22 @@ function getVFSTemplates() {
     }
 
     const indexInGender = (gender === "female" ? female.length : male.length) + 1;
+    const filePath = path.join(VFS_DIR, fileName);
+    let mtime = 0;
+    try {
+      mtime = Math.floor(fs.statSync(filePath).mtimeMs);
+    } catch (_) {}
     const item = {
       id: fileName,
       fileName,
       gender,
-      url: `/VFS/${encodeURIComponent(fileName)}`,
+      url: `/VFS/${encodeURIComponent(fileName)}${mtime ? `?v=${mtime}` : ""}`,
       title:
         known?.title ||
         `${gender === "female" ? "Female" : "Male"} Cosmic Explorer ${indexInGender}`,
       subtitle: known?.subtitle || "Rendezvous 2026 • The Cosmic Sphere",
       badge: known?.badge || `CHARACTER 0${indexInGender}`,
-      filePath: path.join(VFS_DIR, fileName),
+      filePath,
       cropHeight: known?.cropHeight || null,
     };
 
@@ -342,7 +347,7 @@ SEAMLESS LIGHTING & ANATOMY INTEGRITY:
     }
 
     // Resize to exact 1024x1536 (4x6 print ratio) and composite crisp official VFS Rendezvous 2026 white footer banner
-    const BANNER_HEIGHT = 236;
+    const BANNER_HEIGHT = 217;
     const ART_HEIGHT = 1536 - BANNER_HEIGHT;
     let finalPipeline = sharp(generatedBuffer).resize(1024, 1536, {
       fit: "cover",
@@ -351,7 +356,7 @@ SEAMLESS LIGHTING & ANATOMY INTEGRITY:
 
     if (fs.existsSync(BANNER_OVERLAY_PATH)) {
       const bannerBuf = await sharp(BANNER_OVERLAY_PATH)
-        .resize(1024, BANNER_HEIGHT)
+        .resize(1024, BANNER_HEIGHT, { fit: "fill" })
         .png()
         .toBuffer();
       finalPipeline = sharp(generatedBuffer)
