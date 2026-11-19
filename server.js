@@ -35,37 +35,37 @@ const VFS_DIR = path.join(__dirname, "public", "VFS");
 const BANNER_OVERLAY_PATH = path.join(VFS_DIR, "vfs_banner.png");
 
 const TEMPLATE_META = {
-  "Male_1.jpeg": {
-    id: "Male_1.jpeg",
-    gender: "male",
-    title: "Solar Flare Explorer",
-    subtitle: "Crimson-Orange Suit • Ringed Red Giant",
-    badge: "CHARACTER 01",
-    cropHeight: 1388,
-  },
-  "Male_2.jpeg": {
-    id: "Male_2.jpeg",
+  "3.png": {
+    id: "3.png",
     gender: "male",
     title: "Deep Space Voyager",
     subtitle: "Cobalt-Blue Suit • Sapphire Ringed Planet",
-    badge: "CHARACTER 02",
-    cropHeight: 1402,
-  },
-  "Female_1.jpeg": {
-    id: "Female_1.jpeg",
-    gender: "female",
-    title: "Nebula Galaxy Pioneer",
-    subtitle: "Violet-Purple Suit • Spiral Cosmic Galaxy",
     badge: "CHARACTER 01",
-    cropHeight: 1373,
+    cropHeight: 1516,
   },
-  "Female_2.jpeg": {
-    id: "Female_2.jpeg",
+  "4.png": {
+    id: "4.png",
+    gender: "male",
+    title: "Solar Flare Explorer",
+    subtitle: "Crimson-Orange Suit • Ringed Red Giant",
+    badge: "CHARACTER 02",
+    cropHeight: 1516,
+  },
+  "1.png": {
+    id: "1.png",
     gender: "female",
     title: "Aurora Cosmos Navigator",
     subtitle: "Emerald-Green Suit • Aurora Moonscape",
+    badge: "CHARACTER 01",
+    cropHeight: 1516,
+  },
+  "2.png": {
+    id: "2.png",
+    gender: "female",
+    title: "Nebula Galaxy Pioneer",
+    subtitle: "Violet-Purple Suit • Spiral Cosmic Galaxy",
     badge: "CHARACTER 02",
-    cropHeight: 1389,
+    cropHeight: 1516,
   },
 };
 
@@ -341,21 +341,35 @@ SEAMLESS LIGHTING & ANATOMY INTEGRITY:
       throw new Error("No image returned from AI model.");
     }
 
-    // Resize to exact 1024x1536 (4x6 print ratio) and composite crisp official VFS Rendezvous 2026 banner
+    // Resize to exact 1024x1536 (4x6 print ratio) and composite crisp official VFS Rendezvous 2026 white footer banner
+    const BANNER_HEIGHT = 242;
+    const ART_HEIGHT = 1536 - BANNER_HEIGHT;
     let finalPipeline = sharp(generatedBuffer).resize(1024, 1536, {
       fit: "cover",
-      position: "center",
+      position: "top",
     });
 
     if (fs.existsSync(BANNER_OVERLAY_PATH)) {
-      const bannerBuf = await sharp(BANNER_OVERLAY_PATH).resize(1024, 128).png().toBuffer();
-      finalPipeline = finalPipeline.composite([
-        {
-          input: bannerBuf,
-          top: 1536 - 128 - 44,
+      const bannerBuf = await sharp(BANNER_OVERLAY_PATH)
+        .resize(1024, BANNER_HEIGHT)
+        .png()
+        .toBuffer();
+      finalPipeline = sharp(generatedBuffer)
+        .resize(1024, ART_HEIGHT, { fit: "cover", position: "center" })
+        .extend({
+          top: 0,
+          bottom: BANNER_HEIGHT,
           left: 0,
-        },
-      ]);
+          right: 0,
+          background: { r: 255, g: 255, b: 255, alpha: 1 },
+        })
+        .composite([
+          {
+            input: bannerBuf,
+            top: ART_HEIGHT,
+            left: 0,
+          },
+        ]);
     }
 
     const finalBuffer = await finalPipeline.jpeg({ quality: 94, mozjpeg: true }).toBuffer();
