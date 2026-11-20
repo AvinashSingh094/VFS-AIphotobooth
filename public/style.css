@@ -833,15 +833,26 @@ body {
   box-shadow: 0 0 20px var(--hero-red-glow);
 }
 
-/* 2 Superhero Grid (for Selected Gender) */
+/* Multi-Character Grid (for Selected Gender: 4 Male / 5 Female) */
 .styles-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 20px;
   width: 100%;
-  max-width: 780px;
+  max-width: 1080px;
   margin: auto;
   align-items: center;
+  justify-items: center;
+}
+
+.styles-grid[data-count="4"] {
+  grid-template-columns: repeat(4, 1fr);
+  max-width: 1040px;
+}
+
+.styles-grid[data-count="5"] {
+  grid-template-columns: repeat(5, 1fr);
+  max-width: 1120px;
 }
 
 .style-card {
@@ -1635,13 +1646,20 @@ body {
     height: auto;
   }
 
-  .styles-grid {
+  .styles-grid,
+  .styles-grid[data-count="4"],
+  .styles-grid[data-count="5"] {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     flex: 1;
-    max-width: 880px;
-    gap: 24px;
+    max-width: 960px;
+    gap: 18px;
     align-content: center;
+  }
+
+  .styles-grid[data-count="4"] {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 760px;
   }
 
   .style-card {

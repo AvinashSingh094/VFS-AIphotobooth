@@ -35,37 +35,86 @@ const VFS_DIR = path.join(__dirname, "public", "VFS");
 const BANNER_OVERLAY_PATH = path.join(VFS_DIR, "vfs_banner.png");
 
 const TEMPLATE_META = {
-  "3.png": {
-    id: "3.png",
-    gender: "male",
-    title: "Deep Space Voyager",
-    subtitle: "Cobalt-Blue Suit • Sapphire Ringed Planet",
+  "01.jpg": {
+    id: "01.jpg",
+    gender: "female",
+    hasHelmet: false,
+    title: "Lunar Cyber Huntress",
+    subtitle: "Neon-Blue Tactical Trench • Full Blue Moon",
     badge: "CHARACTER 01",
-    cropHeight: 1546,
+    cropHeight: 520,
   },
-  "4.png": {
-    id: "4.png",
-    gender: "male",
-    title: "Solar Flare Explorer",
-    subtitle: "Crimson-Orange Suit • Ringed Red Giant",
+  "02.jpg": {
+    id: "02.jpg",
+    gender: "female",
+    hasHelmet: false,
+    title: "Emerald Horizon Vanguard",
+    subtitle: "White-Titanium Chest Armor • Aurora Moonscape",
     badge: "CHARACTER 02",
-    cropHeight: 1546,
+    cropHeight: 520,
   },
-  "1.png": {
-    id: "1.png",
+  "03.jpg": {
+    id: "03.jpg",
     gender: "female",
-    title: "Aurora Cosmos Navigator",
-    subtitle: "Emerald-Green Suit • Aurora Moonscape",
-    badge: "CHARACTER 01",
-    cropHeight: 1546,
-  },
-  "2.png": {
-    id: "2.png",
-    gender: "female",
+    hasHelmet: true,
     title: "Nebula Galaxy Pioneer",
-    subtitle: "Violet-Purple Suit • Spiral Cosmic Galaxy",
+    subtitle: "Violet-Purple Spacesuit • Spiral Cosmic Galaxy",
+    badge: "CHARACTER 03",
+    cropHeight: 520,
+  },
+  "04.jpg": {
+    id: "04.jpg",
+    gender: "female",
+    hasHelmet: false,
+    title: "Galactic Cloaked Ranger",
+    subtitle: "Olive Cloak & Cosmic Armor • Violet Nebula",
+    badge: "CHARACTER 04",
+    cropHeight: 520,
+  },
+  "05.jpg": {
+    id: "05.jpg",
+    gender: "female",
+    hasHelmet: true,
+    title: "Aurora Cosmos Navigator",
+    subtitle: "Emerald-Green Spacesuit • Aurora Moonscape",
+    badge: "CHARACTER 05",
+    cropHeight: 520,
+  },
+  "06.jpg": {
+    id: "06.jpg",
+    gender: "male",
+    hasHelmet: false,
+    title: "Galactic Cloaked Guardian",
+    subtitle: "Olive Cloak & Tactical Armor • Violet Nebula",
+    badge: "CHARACTER 01",
+    cropHeight: 520,
+  },
+  "07.jpg": {
+    id: "07.jpg",
+    gender: "male",
+    hasHelmet: true,
+    title: "Solar Flare Explorer",
+    subtitle: "Crimson-Orange Spacesuit • Ringed Red Giant",
     badge: "CHARACTER 02",
-    cropHeight: 1546,
+    cropHeight: 520,
+  },
+  "08.jpg": {
+    id: "08.jpg",
+    gender: "male",
+    hasHelmet: false,
+    title: "Lunar Cyber Sentinel",
+    subtitle: "Neon-Blue Tactical Trench • Full Blue Moon",
+    badge: "CHARACTER 03",
+    cropHeight: 520,
+  },
+  "09.jpg": {
+    id: "09.jpg",
+    gender: "male",
+    hasHelmet: true,
+    title: "Deep Space Voyager",
+    subtitle: "Cobalt-Blue Spacesuit • Sapphire Ringed Planet",
+    badge: "CHARACTER 04",
+    cropHeight: 520,
   },
 };
 
@@ -78,19 +127,10 @@ function getVFSTemplates() {
     return { male, female, all: [] };
   }
 
-  const files = fs
-    .readdirSync(VFS_DIR)
-    .filter((f) => {
-      if (f.toLowerCase() === "vfs_banner.png") return false;
-      const full = path.join(VFS_DIR, f);
-      return fs.statSync(full).isFile() && imageExts.has(path.extname(f).toLowerCase());
-    })
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
-  files.forEach((fileName) => {
+  const buildItem = (filePath, fileName, explicitGender) => {
     const lower = fileName.toLowerCase();
-    const known = TEMPLATE_META[fileName];
-    let gender = known?.gender;
+    const known = TEMPLATE_META[fileName] || TEMPLATE_META[lower];
+    let gender = explicitGender || known?.gender;
     if (!gender) {
       if (lower.startsWith("female") || lower.startsWith("f_") || lower.startsWith("f-")) {
         gender = "female";
@@ -100,16 +140,18 @@ function getVFSTemplates() {
     }
 
     const indexInGender = (gender === "female" ? female.length : male.length) + 1;
-    const filePath = path.join(VFS_DIR, fileName);
     let mtime = 0;
     try {
       mtime = Math.floor(fs.statSync(filePath).mtimeMs);
-    } catch (_) {}
+    } catch (_) { }
+
+    const relFromVfs = path.relative(VFS_DIR, filePath).split(path.sep).map(encodeURIComponent).join("/");
     const item = {
       id: fileName,
       fileName,
       gender,
-      url: `/VFS/${encodeURIComponent(fileName)}${mtime ? `?v=${mtime}` : ""}`,
+      hasHelmet: Boolean(known?.hasHelmet),
+      url: `/VFS/${relFromVfs}${mtime ? `?v=${mtime}` : ""}`,
       title:
         known?.title ||
         `${gender === "female" ? "Female" : "Male"} Cosmic Explorer ${indexInGender}`,
@@ -124,6 +166,38 @@ function getVFSTemplates() {
     } else {
       male.push(item);
     }
+  };
+
+  // 1. Scan separated gender folders (public/VFS/male and public/VFS/female)
+  for (const genderFolder of ["male", "female"]) {
+    const subDir = path.join(VFS_DIR, genderFolder);
+    if (fs.existsSync(subDir) && fs.statSync(subDir).isDirectory()) {
+      const subFiles = fs
+        .readdirSync(subDir)
+        .filter((f) => {
+          const full = path.join(subDir, f);
+          return fs.statSync(full).isFile() && imageExts.has(path.extname(f).toLowerCase());
+        })
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+      subFiles.forEach((fileName) => {
+        buildItem(path.join(subDir, fileName), fileName, genderFolder);
+      });
+    }
+  }
+
+  // 2. Also scan any top-level template files in public/VFS (excluding vfs_banner.png)
+  const rootFiles = fs
+    .readdirSync(VFS_DIR)
+    .filter((f) => {
+      if (f.toLowerCase() === "vfs_banner.png") return false;
+      const full = path.join(VFS_DIR, f);
+      return fs.statSync(full).isFile() && imageExts.has(path.extname(f).toLowerCase());
+    })
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+  rootFiles.forEach((fileName) => {
+    buildItem(path.join(VFS_DIR, fileName), fileName, null);
   });
 
   return { male, female, all: [...male, ...female] };
@@ -176,7 +250,7 @@ async function uploadToCloudinary(base64DataUri) {
 // Endpoint: Health / Config (lists VFS male and female character templates)
 app.get("/api/config", (req, res) => {
   const pools = getVFSTemplates();
-  const serialize = ({ filePath, cropHeight, ...publicItem }) => publicItem;
+  const serialize = ({ filePath, cropHeight, hasHelmet, ...publicItem }) => publicItem;
   res.json({
     mode: "vfs-gender-and-character-selection",
     event: "VFS Global — Rendezvous 2026: The Cosmic Sphere",
@@ -247,7 +321,8 @@ app.post("/api/generate", async (req, res) => {
     const imageSize = (process.env.IMAGE_SIZE || "1024x1536").trim();
     const imageQuality = (process.env.IMAGE_QUALITY || "high").trim();
 
-    const prompt = `
+    const prompt = selectedTemplate.hasHelmet
+      ? `
 Edit Image 2 (the cosmic astronaut template) by seamlessly replacing ONLY the astronaut's face, head, and hair inside the open helmet with the real ${targetGender} from Image 1 (user selfie). Keep everything else in Image 2—the exact spacesuit, helmet shell, shoulders, torso, arms, hands, gloves (with all 5 natural fingers intact), pose, planets, nebulae, and cosmic background—100% preserved and unchanged.
 
 NATURAL HEAD-TO-HELMET & BODY PROPORTIONS:
@@ -259,7 +334,20 @@ SEAMLESS LIGHTING & ANATOMY INTEGRITY:
 - Relight the face, neck, and hair to match Image 2's exact studio helmet key light, shadows, subtle colored cosmic rim light, skin texture, and cinematic color grading so it looks organically photographed in a single exposure.
 - Keep both gloved hands anatomically accurate with all 5 fingers (thumb + 4 fingers) exactly as shown in Image 2—never alter, merge, or drop fingers.
 - Keep the frame completely free of any text, banners, logos, or watermarks (the official event banner is composited separately).
-    `.trim();
+      `.trim()
+      : `
+Edit Image 2 (the cosmic character template) by seamlessly replacing ONLY the character's face, head, and hairstyle with the real ${targetGender} from Image 1 (user selfie), blended naturally into Image 2's exact art style and lighting. Keep everything else in Image 2—the exact outfit, armor, cloak/coat, collar, shoulders, torso, arms, hands/gloves, pose, moon, planets, nebulae, and cosmic background—100% preserved and unchanged.
+
+IDENTITY & PROPORTIONS:
+- Preserve 100% of the person's recognizable facial identity from Image 1: exact face shape, eyes, eyebrows, nose, lips, skin tone, jawline, natural hair, facial hair (beard/mustache or clean-shaven), and eyeglasses/bindi/earrings if worn.
+- Match the exact head size, neck alignment, and shoulder proportions of the character in Image 2 with a confident, natural expression.
+- If Image 2 has any exposed skin on the neck or arms, match its tone harmoniously with the user's skin tone while preserving any cybernetic details, tattoos, or armor pieces from Image 2.
+
+SEAMLESS STYLE, LIGHTING & ANATOMY INTEGRITY:
+- Render and relight the face, neck, and hair to match Image 2's exact cosmic key light, rim light, shading, and visual rendering style so the head and body look created together in one unified artwork.
+- Keep both hands anatomically accurate exactly as shown in Image 2—never alter, merge, or drop fingers.
+- Keep the frame completely free of any text, banners, logos, or watermarks (the official event banner is composited separately).
+      `.trim();
 
     // Prepare user selfie PNG
     const rawSelfieBase64 = photo.replace(/^data:image\/[a-zA-Z0-9.+]+;base64,/, "");
