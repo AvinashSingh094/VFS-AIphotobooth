@@ -216,14 +216,17 @@ function getVFSTemplates() {
 async function uploadToCloudinary(base64DataUri) {
   dotenv.config({ override: true });
   const cloudName = (process.env.CLOUDINARY_CLOUD_NAME || "dzz5belph").trim();
-  const primaryPreset = (process.env.CLOUDINARY_UPLOAD_PRESET || "superhero_photobooth").trim();
-  const folderName = (process.env.CLOUDINARY_FOLDER || "vfs_cosmic_photobooth").trim();
+  const primaryPreset = (process.env.CLOUDINARY_UPLOAD_PRESET || "VFS-Global").trim();
+  const folderName = (process.env.CLOUDINARY_FOLDER || "VFS-Global").trim();
 
   const presetsToTry = Array.from(
     new Set([
       primaryPreset,
-      "superhero_photobooth",
+      "VFS-Global",
+      "vfs-global",
+      "VFS_Global",
       "Garnier_photobooth",
+      "superhero_photobooth",
       "garnier_photobooth",
       "golf_photobooth",
       "illumina_photobooth",
@@ -240,12 +243,16 @@ async function uploadToCloudinary(base64DataUri) {
           file: base64DataUri,
           upload_preset: preset,
           folder: folderName,
+          asset_folder: folderName,
         }),
       });
 
       const data = await res.json();
       if (data && data.secure_url) {
-        console.log(`[Cloudinary] Upload success (preset="${preset}"):`, data.secure_url);
+        console.log(
+          `[Cloudinary] Upload success (preset="${preset}", asset_folder="${data.asset_folder || folderName}"):`,
+          data.secure_url
+        );
         return data.secure_url;
       }
     } catch (err) {
