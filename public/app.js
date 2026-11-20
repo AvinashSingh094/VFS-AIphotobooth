@@ -94,12 +94,97 @@ let templatesByGender = {
       badge: "CHARACTER 05",
     },
   ],
+  maleMulti: [
+    {
+      id: "m_multi_01.jpg",
+      fileName: "m_multi_01.jpg",
+      gender: "male",
+      mode: "multi",
+      url: "/VFS/male-multi/m_multi_01.jpg?v=multi",
+      title: "Deep Space Voyagers Duo",
+      subtitle: "Cobalt-Blue Spacesuits • Sapphire Ringed Planet",
+      badge: "DUO 01",
+    },
+    {
+      id: "m_multi_02.jpg",
+      fileName: "m_multi_02.jpg",
+      gender: "male",
+      mode: "multi",
+      url: "/VFS/male-multi/m_multi_02.jpg?v=multi",
+      title: "Lunar Cyber Sentinels Duo",
+      subtitle: "Neon-Blue Tactical Armor • Full Blue Moon",
+      badge: "DUO 02",
+    },
+    {
+      id: "m_multi_03.jpg",
+      fileName: "m_multi_03.jpg",
+      gender: "male",
+      mode: "multi",
+      url: "/VFS/male-multi/m_multi_03.jpg?v=multi",
+      title: "Galactic Guardians Duo",
+      subtitle: "Cloaked & Tactical Cosmic Armor • Violet Nebula",
+      badge: "DUO 03",
+    },
+    {
+      id: "m_multi_04.jpg",
+      fileName: "m_multi_04.jpg",
+      gender: "male",
+      mode: "multi",
+      url: "/VFS/male-multi/m_multi_04.jpg?v=multi",
+      title: "Solar Flare Explorers Duo",
+      subtitle: "Crimson-Orange Spacesuits • Ringed Red Giant",
+      badge: "DUO 04",
+    },
+  ],
+  femaleMulti: [
+    {
+      id: "f_multi_01.jpg",
+      fileName: "f_multi_01.jpg",
+      gender: "female",
+      mode: "multi",
+      url: "/VFS/female-multi/f_multi_01.jpg?v=multi",
+      title: "Nebula Galaxy Pioneers Duo",
+      subtitle: "Violet-Purple Spacesuits • Spiral Cosmic Galaxy",
+      badge: "DUO 01",
+    },
+    {
+      id: "f_multi_02.jpg",
+      fileName: "f_multi_02.jpg",
+      gender: "female",
+      mode: "multi",
+      url: "/VFS/female-multi/f_multi_02.jpg?v=multi",
+      title: "Galactic Cloaked Rangers Duo",
+      subtitle: "Olive Cloaks & Cosmic Armor • Violet Nebula",
+      badge: "DUO 02",
+    },
+    {
+      id: "f_multi_03.jpg",
+      fileName: "f_multi_03.jpg",
+      gender: "female",
+      mode: "multi",
+      url: "/VFS/female-multi/f_multi_03.jpg?v=multi",
+      title: "Aurora Cosmos Navigators Duo",
+      subtitle: "Emerald-Green Spacesuits • Aurora Moonscape",
+      badge: "DUO 03",
+    },
+    {
+      id: "f_multi_04.jpg",
+      fileName: "f_multi_04.jpg",
+      gender: "female",
+      mode: "multi",
+      url: "/VFS/female-multi/f_multi_04.jpg?v=multi",
+      title: "Emerald Horizon Vanguards Duo",
+      subtitle: "White-Titanium Chest Armor • Aurora Moonscape",
+      badge: "DUO 04",
+    },
+  ],
 };
 
 // ── State ──
 const state = {
   step: "gender",
   gender: null,
+  mode: "single",
   template: null,
   photo: null,
 };
@@ -110,6 +195,7 @@ let countdownTimerId = null;
 
 // ── DOM References ──
 const panelGender = document.getElementById("panel-gender");
+const panelMode = document.getElementById("panel-mode");
 const panelCharacter = document.getElementById("panel-character");
 const panelCamera = document.getElementById("panel-camera");
 const panelResult = document.getElementById("panel-result");
@@ -120,6 +206,13 @@ const genderCards = document.querySelectorAll(".gender-card[data-select-gender]"
 const genderPreviewMale = document.getElementById("gender-preview-male");
 const genderPreviewFemale = document.getElementById("gender-preview-female");
 
+const modeCards = document.querySelectorAll(".mode-card[data-select-mode]");
+const modeHeading = document.getElementById("mode-heading");
+const modePreviewSingle = document.getElementById("mode-preview-single");
+const modePreviewMulti = document.getElementById("mode-preview-multi");
+const btnModeBackGender = document.getElementById("btn-mode-back-gender");
+
+const characterHeading = document.getElementById("character-heading");
 const characterStepTag = document.getElementById("character-step-tag");
 const characterGrid = document.getElementById("character-grid");
 const btnBackToGender = document.getElementById("btn-back-to-gender");
@@ -181,6 +274,13 @@ if (fullscreenBtn) {
 }
 
 // ── Load Dynamic VFS Templates from Backend ──
+function getTemplatesForSelection(gender, mode) {
+  if (mode === "multi") {
+    return gender === "female" ? templatesByGender.femaleMulti : templatesByGender.maleMulti;
+  }
+  return gender === "female" ? templatesByGender.female : templatesByGender.male;
+}
+
 async function loadTemplatesConfig() {
   try {
     const res = await fetch("/api/config");
@@ -194,16 +294,25 @@ async function loadTemplatesConfig() {
       templatesByGender.female = data.templates.female;
       if (genderPreviewFemale) genderPreviewFemale.src = data.templates.female[0].url;
     }
+    if (data?.templates?.maleMulti?.length) {
+      templatesByGender.maleMulti = data.templates.maleMulti;
+    }
+    if (data?.templates?.femaleMulti?.length) {
+      templatesByGender.femaleMulti = data.templates.femaleMulti;
+    }
+    if (state.gender) {
+      updateModePreviews(state.gender);
+    }
     if (state.step === "character" && state.gender) {
-      renderCharacterGrid(state.gender);
+      renderCharacterGrid(state.gender, state.mode);
     }
   } catch (err) {
     console.warn("Using built-in VFS template definitions:", err);
   }
 }
 
-// ── 4-Step Screen Navigation ──
-const STEP_ORDER = ["gender", "character", "camera", "result"];
+// ── 5-Step Screen Navigation ──
+const STEP_ORDER = ["gender", "mode", "character", "camera", "result"];
 
 function showScreen(screen) {
   state.step = screen;
@@ -213,6 +322,7 @@ function showScreen(screen) {
   }
 
   panelGender.classList.toggle("hidden", screen !== "gender");
+  panelMode?.classList.toggle("hidden", screen !== "mode");
   panelCharacter.classList.toggle("hidden", screen !== "character");
   panelCamera.classList.toggle("hidden", screen !== "camera");
   panelResult.classList.toggle("hidden", screen !== "result");
@@ -228,6 +338,20 @@ function showScreen(screen) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function updateModePreviews(gender) {
+  const singleList = getTemplatesForSelection(gender, "single") || [];
+  const multiList = getTemplatesForSelection(gender, "multi") || [];
+  if (modePreviewSingle && singleList[0]) {
+    modePreviewSingle.src = singleList[0].url;
+  }
+  if (modePreviewMulti && multiList[0]) {
+    modePreviewMulti.src = multiList[0].url;
+  }
+  if (modeHeading) {
+    modeHeading.textContent = `${gender.toUpperCase()} — Choose Single or Multiple Characters`;
+  }
+}
+
 // ── Step 1: Gender Selection ──
 function selectGender(gender) {
   const changedGender = state.gender !== gender;
@@ -237,13 +361,12 @@ function selectGender(gender) {
     card.classList.toggle("selected", card.dataset.selectGender === gender);
   });
 
-  const list = templatesByGender[gender] || [];
-  if (changedGender || !state.template || state.template.gender !== gender) {
-    state.template = list[0] || null;
+  if (changedGender) {
+    state.template = null;
   }
 
-  renderCharacterGrid(gender);
-  showScreen("character");
+  updateModePreviews(gender);
+  showScreen("mode");
 }
 
 genderCards.forEach((card) => {
@@ -252,11 +375,44 @@ genderCards.forEach((card) => {
   });
 });
 
-// ── Step 2: Character Selection ──
-function renderCharacterGrid(gender) {
-  const list = templatesByGender[gender] || [];
+// ── Step 2: Single / Multiple Character Mode Selection ──
+function selectMode(mode) {
+  state.mode = mode === "multi" ? "multi" : "single";
+
+  modeCards.forEach((card) => {
+    card.classList.toggle("selected", card.dataset.selectMode === state.mode);
+  });
+
+  const list = getTemplatesForSelection(state.gender || "male", state.mode) || [];
+  if (
+    !state.template ||
+    state.template.gender !== state.gender ||
+    (state.template.mode || "single") !== state.mode
+  ) {
+    state.template = list[0] || null;
+  }
+
+  renderCharacterGrid(state.gender || "male", state.mode);
+  showScreen("character");
+}
+
+modeCards.forEach((card) => {
+  card.addEventListener("click", () => {
+    selectMode(card.dataset.selectMode);
+  });
+});
+
+btnModeBackGender?.addEventListener("click", () => showScreen("gender"));
+
+// ── Step 3: Character Selection ──
+function renderCharacterGrid(gender, mode = "single") {
+  const list = getTemplatesForSelection(gender, mode) || [];
   if (characterStepTag) {
-    characterStepTag.textContent = `STEP 02 // ${gender.toUpperCase()} COSMIC SUITS`;
+    characterStepTag.textContent = `STEP 03 // ${gender.toUpperCase()} ${mode === "multi" ? "DUO" : "SINGLE"} COSMIC SUITS`;
+  }
+  if (characterHeading) {
+    characterHeading.textContent =
+      mode === "multi" ? "Choose Your Cosmic Duo" : "Choose Your Cosmic Character";
   }
 
   characterGrid.innerHTML = "";
@@ -304,13 +460,14 @@ function updateSelectedTemplateSummary() {
   if (!state.template) return;
   if (selectedTemplateThumb) selectedTemplateThumb.src = state.template.url;
   if (selectedTemplateGender) {
-    selectedTemplateGender.textContent = `${state.template.gender.toUpperCase()} CHARACTER`;
+    const modeLabel = (state.template.mode || state.mode) === "multi" ? "DUO" : "CHARACTER";
+    selectedTemplateGender.textContent = `${state.template.gender.toUpperCase()} ${modeLabel}`;
   }
   if (selectedTemplateTitle) selectedTemplateTitle.textContent = state.template.title;
 }
 
-btnBackToGender?.addEventListener("click", () => showScreen("gender"));
-btnCharBack?.addEventListener("click", () => showScreen("gender"));
+btnBackToGender?.addEventListener("click", () => showScreen("mode"));
+btnCharBack?.addEventListener("click", () => showScreen("mode"));
 btnCharContinue?.addEventListener("click", proceedToCamera);
 
 btnChangeChar?.addEventListener("click", () => {
@@ -471,8 +628,10 @@ btnRetake.addEventListener("click", () => {
 function resetToStart() {
   state.photo = null;
   state.gender = null;
+  state.mode = "single";
   state.template = null;
   genderCards.forEach((c) => c.classList.remove("selected"));
+  modeCards.forEach((c) => c.classList.remove("selected"));
   showScreen("gender");
 }
 

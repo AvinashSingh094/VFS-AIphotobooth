@@ -1603,6 +1603,7 @@ body {
   }
 
   #panel-gender,
+  #panel-mode,
   #panel-character,
   #panel-style {
     flex: 1;
@@ -1886,6 +1887,7 @@ body {
   .btn-fullscreen,
   .header,
   #panel-gender,
+  #panel-mode,
   #panel-character,
   #panel-camera,
   #loading-view,

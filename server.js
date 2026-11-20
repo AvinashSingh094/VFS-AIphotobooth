@@ -119,11 +119,93 @@ const TEMPLATE_META = {
   "10.jpg": {
     id: "10.jpg",
     gender: "male",
+    mode: "single",
     hasHelmet: false,
     title: "Emerald Horizon Commander",
     subtitle: "White-Titanium Chest Armor • Aurora Moonscape",
     badge: "CHARACTER 05",
     cropHeight: 520,
+  },
+  // ── Multi Character (2 People) Templates ──
+  "m_multi_01.jpg": {
+    id: "m_multi_01.jpg",
+    gender: "male",
+    mode: "multi",
+    hasHelmet: true,
+    title: "Deep Space Voyagers Duo",
+    subtitle: "Cobalt-Blue Spacesuits • Sapphire Ringed Planet",
+    badge: "DUO 01",
+    cropHeight: 886,
+  },
+  "m_multi_02.jpg": {
+    id: "m_multi_02.jpg",
+    gender: "male",
+    mode: "multi",
+    hasHelmet: false,
+    title: "Lunar Cyber Sentinels Duo",
+    subtitle: "Neon-Blue Tactical Armor • Full Blue Moon",
+    badge: "DUO 02",
+    cropHeight: 886,
+  },
+  "m_multi_03.jpg": {
+    id: "m_multi_03.jpg",
+    gender: "male",
+    mode: "multi",
+    hasHelmet: false,
+    title: "Galactic Guardians Duo",
+    subtitle: "Cloaked & Tactical Cosmic Armor • Violet Nebula",
+    badge: "DUO 03",
+    cropHeight: 886,
+  },
+  "m_multi_04.jpg": {
+    id: "m_multi_04.jpg",
+    gender: "male",
+    mode: "multi",
+    hasHelmet: true,
+    title: "Solar Flare Explorers Duo",
+    subtitle: "Crimson-Orange Spacesuits • Ringed Red Giant",
+    badge: "DUO 04",
+    cropHeight: 886,
+  },
+  "f_multi_01.jpg": {
+    id: "f_multi_01.jpg",
+    gender: "female",
+    mode: "multi",
+    hasHelmet: true,
+    title: "Nebula Galaxy Pioneers Duo",
+    subtitle: "Violet-Purple Spacesuits • Spiral Cosmic Galaxy",
+    badge: "DUO 01",
+    cropHeight: 886,
+  },
+  "f_multi_02.jpg": {
+    id: "f_multi_02.jpg",
+    gender: "female",
+    mode: "multi",
+    hasHelmet: false,
+    title: "Galactic Cloaked Rangers Duo",
+    subtitle: "Olive Cloaks & Cosmic Armor • Violet Nebula",
+    badge: "DUO 02",
+    cropHeight: 886,
+  },
+  "f_multi_03.jpg": {
+    id: "f_multi_03.jpg",
+    gender: "female",
+    mode: "multi",
+    hasHelmet: true,
+    title: "Aurora Cosmos Navigators Duo",
+    subtitle: "Emerald-Green Spacesuits • Aurora Moonscape",
+    badge: "DUO 03",
+    cropHeight: 886,
+  },
+  "f_multi_04.jpg": {
+    id: "f_multi_04.jpg",
+    gender: "female",
+    mode: "multi",
+    hasHelmet: false,
+    title: "Emerald Horizon Vanguards Duo",
+    subtitle: "White-Titanium Chest Armor • Aurora Moonscape",
+    badge: "DUO 04",
+    cropHeight: 886,
   },
 };
 
@@ -131,12 +213,14 @@ function getVFSTemplates() {
   const imageExts = new Set([".jpg", ".jpeg", ".png", ".webp"]);
   const male = [];
   const female = [];
+  const maleMulti = [];
+  const femaleMulti = [];
 
   if (!fs.existsSync(VFS_DIR)) {
-    return { male, female, all: [] };
+    return { male, female, maleMulti, femaleMulti, all: [] };
   }
 
-  const buildItem = (filePath, fileName, explicitGender) => {
+  const buildItem = (filePath, fileName, explicitGender, explicitMode) => {
     const lower = fileName.toLowerCase();
     const known = TEMPLATE_META[fileName] || TEMPLATE_META[lower];
     let gender = explicitGender || known?.gender;
@@ -147,8 +231,17 @@ function getVFSTemplates() {
         gender = "male";
       }
     }
+    const mode = explicitMode || known?.mode || "single";
+    const targetPool =
+      mode === "multi"
+        ? gender === "female"
+          ? femaleMulti
+          : maleMulti
+        : gender === "female"
+          ? female
+          : male;
 
-    const indexInGender = (gender === "female" ? female.length : male.length) + 1;
+    const indexInPool = targetPool.length + 1;
     let mtime = 0;
     try {
       mtime = Math.floor(fs.statSync(filePath).mtimeMs);
@@ -159,27 +252,31 @@ function getVFSTemplates() {
       id: fileName,
       fileName,
       gender,
+      mode,
       hasHelmet: Boolean(known?.hasHelmet),
       url: `/VFS/${relFromVfs}${mtime ? `?v=${mtime}` : ""}`,
       title:
         known?.title ||
-        `${gender === "female" ? "Female" : "Male"} Cosmic Explorer ${indexInGender}`,
+        `${gender === "female" ? "Female" : "Male"} Cosmic ${mode === "multi" ? "Duo" : "Explorer"} ${indexInPool}`,
       subtitle: known?.subtitle || "Rendezvous 2026 • The Cosmic Sphere",
-      badge: known?.badge || `CHARACTER 0${indexInGender}`,
+      badge: known?.badge || `${mode === "multi" ? "DUO" : "CHARACTER"} 0${indexInPool}`,
       filePath,
       cropHeight: known?.cropHeight || null,
     };
 
-    if (gender === "female") {
-      female.push(item);
-    } else {
-      male.push(item);
-    }
+    targetPool.push(item);
   };
 
-  // 1. Scan separated gender folders (public/VFS/male and public/VFS/female)
-  for (const genderFolder of ["male", "female"]) {
-    const subDir = path.join(VFS_DIR, genderFolder);
+  // 1. Scan separated gender/mode folders
+  const folderMap = [
+    { dir: "male", gender: "male", mode: "single" },
+    { dir: "female", gender: "female", mode: "single" },
+    { dir: "male-multi", gender: "male", mode: "multi" },
+    { dir: "female-multi", gender: "female", mode: "multi" },
+  ];
+
+  for (const { dir, gender, mode } of folderMap) {
+    const subDir = path.join(VFS_DIR, dir);
     if (fs.existsSync(subDir) && fs.statSync(subDir).isDirectory()) {
       const subFiles = fs
         .readdirSync(subDir)
@@ -190,7 +287,7 @@ function getVFSTemplates() {
         .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
       subFiles.forEach((fileName) => {
-        buildItem(path.join(subDir, fileName), fileName, genderFolder);
+        buildItem(path.join(subDir, fileName), fileName, gender, mode);
       });
     }
   }
@@ -206,10 +303,16 @@ function getVFSTemplates() {
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   rootFiles.forEach((fileName) => {
-    buildItem(path.join(VFS_DIR, fileName), fileName, null);
+    buildItem(path.join(VFS_DIR, fileName), fileName, null, null);
   });
 
-  return { male, female, all: [...male, ...female] };
+  return {
+    male,
+    female,
+    maleMulti,
+    femaleMulti,
+    all: [...male, ...female, ...maleMulti, ...femaleMulti],
+  };
 }
 
 // Helper: Upload generated image to Cloudinary
@@ -263,18 +366,22 @@ async function uploadToCloudinary(base64DataUri) {
   return null;
 }
 
-// Endpoint: Health / Config (lists VFS male and female character templates)
+// Endpoint: Health / Config (lists VFS male and female single & multi character templates)
 app.get("/api/config", (req, res) => {
   const pools = getVFSTemplates();
   const serialize = ({ filePath, cropHeight, hasHelmet, ...publicItem }) => publicItem;
   res.json({
-    mode: "vfs-gender-and-character-selection",
+    mode: "vfs-gender-mode-and-character-selection",
     event: "VFS Global — Rendezvous 2026: The Cosmic Sphere",
     maleTemplateCount: pools.male.length,
     femaleTemplateCount: pools.female.length,
+    maleMultiTemplateCount: pools.maleMulti.length,
+    femaleMultiTemplateCount: pools.femaleMulti.length,
     templates: {
       male: pools.male.map(serialize),
       female: pools.female.map(serialize),
+      maleMulti: pools.maleMulti.map(serialize),
+      femaleMulti: pools.femaleMulti.map(serialize),
     },
   });
 });
@@ -333,12 +440,41 @@ app.post("/api/generate", async (req, res) => {
     }
 
     const targetGender = selectedTemplate.gender;
+    const isMulti = selectedTemplate.mode === "multi";
     const imageModel = (process.env.IMAGE_MODEL || "gpt-image-2.5-flare").trim();
     const imageSize = (process.env.IMAGE_SIZE || "1024x1536").trim();
     const imageQuality = (process.env.IMAGE_QUALITY || "high").trim();
 
-    const prompt = selectedTemplate.hasHelmet
-      ? `
+    const prompt = isMulti
+      ? selectedTemplate.hasHelmet
+        ? `
+Edit Image 2 (the cosmic astronaut duo template featuring TWO astronauts) by seamlessly replacing ONLY BOTH astronauts' faces, heads, and hair inside their open helmets with the TWO real people from Image 1 (group selfie) — map the person on the LEFT of Image 1 to the LEFT astronaut in Image 2, and the person on the RIGHT of Image 1 to the RIGHT astronaut in Image 2. Keep everything else in Image 2—both exact spacesuits, helmet shells, shoulders, torsos, arms, hands, gloves (with all 5 natural fingers intact), poses, planets, nebulae, and cosmic background—100% preserved and unchanged.
+
+NATURAL HEAD-TO-HELMET & IDENTITY FIDELITY (BOTH PEOPLE):
+- Make BOTH people's faces and heads slightly LARGER (~10–12% fuller) so each fills their open helmet opening generously and naturally with only a slim realistic margin around the ears, cheeks, and top of the hair.
+- Preserve 100% of BOTH people's distinct recognizable facial identities from Image 1: exact face shapes, eyes, eyebrows, noses, lips, skin tones, jawlines, natural hair, facial hair, and eyeglasses/bindi/earrings if worn. Never swap or blend the two people into each other.
+- Keep both faces clear and unobstructed inside their open helmets with natural, warm, confident expressions.
+
+SEAMLESS LIGHTING & ANATOMY INTEGRITY:
+- Relight both faces, necks, and hair to match Image 2's exact studio helmet key light, shadows, colored cosmic rim light, skin texture, and cinematic color grading.
+- Keep all gloved hands anatomically accurate with all 5 fingers exactly as shown in Image 2.
+- Keep the frame completely free of any text, banners, logos, or watermarks (the official event banner is composited separately).
+        `.trim()
+        : `
+Edit Image 2 (the cosmic duo character template featuring TWO characters) by seamlessly replacing ONLY BOTH characters' faces, heads, and hairstyles with the TWO real people from Image 1 (group selfie) — map the person on the LEFT of Image 1 to the LEFT character in Image 2, and the person on the RIGHT of Image 1 to the RIGHT character in Image 2, blended naturally into Image 2's exact art style and lighting. Keep everything else in Image 2—both exact outfits, armor, cloaks/coats, collars, shoulders, torsos, arms, hands/gloves, poses, moon, planets, nebulae, and cosmic background—100% preserved and unchanged.
+
+IDENTITY & PROPORTIONS (BOTH PEOPLE):
+- Preserve 100% of BOTH people's distinct recognizable facial identities from Image 1: exact face shapes, eyes, eyebrows, noses, lips, skin tones, jawlines, natural hair, facial hair, and eyeglasses/bindi/earrings if worn. Never swap or blend the two people into each other.
+- Match the exact head sizes, neck alignments, and shoulder proportions of both characters in Image 2 with confident, natural expressions.
+- Harmonize any exposed neck/arm skin tone with each respective person while preserving all cybernetic details, tattoos, or armor pieces from Image 2.
+
+SEAMLESS STYLE, LIGHTING & ANATOMY INTEGRITY:
+- Render and relight both faces, necks, and hair to match Image 2's exact cosmic key light, rim light, shading, and visual rendering style so both characters look created together in one unified artwork.
+- Keep all hands anatomically accurate exactly as shown in Image 2.
+- Keep the frame completely free of any text, banners, logos, or watermarks (the official event banner is composited separately).
+        `.trim()
+      : selectedTemplate.hasHelmet
+        ? `
 Edit Image 2 (the cosmic astronaut template) by seamlessly replacing ONLY the astronaut's face, head, and hair inside the open helmet with the real ${targetGender} from Image 1 (user selfie). Keep everything else in Image 2—the exact spacesuit, helmet shell, shoulders, torso, arms, hands, gloves (with all 5 natural fingers intact), pose, planets, nebulae, and cosmic background—100% preserved and unchanged.
 
 NATURAL HEAD-TO-HELMET & BODY PROPORTIONS:
@@ -351,7 +487,7 @@ SEAMLESS LIGHTING & ANATOMY INTEGRITY:
 - Keep both gloved hands anatomically accurate with all 5 fingers (thumb + 4 fingers) exactly as shown in Image 2—never alter, merge, or drop fingers.
 - Keep the frame completely free of any text, banners, logos, or watermarks (the official event banner is composited separately).
       `.trim()
-      : `
+        : `
 Edit Image 2 (the cosmic character template) by seamlessly replacing ONLY the character's face, head, and hairstyle with the real ${targetGender} from Image 1 (user selfie), blended naturally into Image 2's exact art style and lighting. Keep everything else in Image 2—the exact outfit, armor, cloak/coat, collar, shoulders, torso, arms, hands/gloves, pose, moon, planets, nebulae, and cosmic background—100% preserved and unchanged.
 
 IDENTITY & PROPORTIONS:

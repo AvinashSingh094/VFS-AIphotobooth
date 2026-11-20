@@ -10,7 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,700&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=23" />
+  <link rel="stylesheet" href="style.css?v=25" />
 </head>
 
 <body>
@@ -87,15 +87,41 @@
       </div>
     </section>
 
-    <!-- ==================== STEP 2: CHARACTER SELECTION PAGE ==================== -->
+    <!-- ==================== STEP 2: MODE SELECTION PAGE (SINGLE / MULTIPLE) ==================== -->
+    <section class="panel hidden" id="panel-mode">
+      <div class="section-block">
+        <div class="section-header-row">
+          <div>
+            <h2 id="mode-heading">Choose Portrait Mode</h2>
+          </div>
+          <button type="button" class="btn-back btn-compact" id="btn-mode-back-gender">
+            &larr; Change Gender
+          </button>
+        </div>
+
+        <div class="gender-cards-grid mode-cards-grid">
+          <button type="button" class="style-card gender-card mode-card" data-select-mode="single">
+            <img id="mode-preview-single" src="/VFS/male/06.jpg?v=final" alt="Single Character" />
+            <div class="gender-card-label">SINGLE CHARACTER &rarr;</div>
+          </button>
+
+          <button type="button" class="style-card gender-card mode-card" data-select-mode="multi">
+            <img id="mode-preview-multi" src="/VFS/male-multi/m_multi_01.jpg?v=multi" alt="Multiple Characters" />
+            <div class="gender-card-label">MULTIPLE CHARACTERS &rarr;</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== STEP 3: CHARACTER SELECTION PAGE ==================== -->
     <section class="panel hidden" id="panel-character">
       <div class="section-block">
         <div class="section-header-row">
           <div>
-            <h2>Choose Your Cosmic Character</h2>
+            <h2 id="character-heading">Choose Your Cosmic Character</h2>
           </div>
           <button type="button" class="btn-back btn-compact" id="btn-back-to-gender">
-            &larr; Change Gender
+            &larr; Change Mode
           </button>
         </div>
 
@@ -244,7 +270,7 @@
 
   </div>
 
-  <script src="app.js?v=24"></script>
+  <script src="app.js?v=25"></script>
 </body>
 
 </html>
