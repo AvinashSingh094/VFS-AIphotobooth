@@ -514,24 +514,49 @@ SEAMLESS STYLE, LIGHTING & ANATOMY INTEGRITY:
     const selfieFile = await OpenAI.toFile(cleanSelfiePng, "user_selfie.png", { type: "image/png" });
 
     // Prepare clean banner-free cosmic reference PNG from selected VFS template so AI renders pure cosmic art
-    const templateMeta = await sharp(selectedTemplate.filePath).metadata();
+    // Dynamically detect the white VFS footer start row so any template resolution (600px, 1024px, 1800px) crops cleanly
+    const rawTemplate = await sharp(selectedTemplate.filePath).raw().toBuffer({ resolveWithObject: true });
+    const tWidth = rawTemplate.info.width;
+    const tHeight = rawTemplate.info.height;
+    const tChannels = rawTemplate.info.channels;
+    let detectedCropHeight = tHeight;
+    const scanStart = Math.floor(tHeight * 0.72);
+    for (let y = scanStart; y < tHeight; y++) {
+      let lumSum = 0;
+      const xStart = Math.min(20, Math.floor(tWidth * 0.05));
+      const xEnd = Math.max(xStart + 1, tWidth - xStart);
+      for (let x = xStart; x < xEnd; x++) {
+        const idx = (y * tWidth + x) * tChannels;
+        lumSum += (rawTemplate.data[idx] + rawTemplate.data[idx + 1] + rawTemplate.data[idx + 2]) / 3;
+      }
+      if (lumSum / (xEnd - xStart) > 235) {
+        detectedCropHeight = y;
+        break;
+      }
+    }
+
     let templatePipeline = sharp(selectedTemplate.filePath);
-    if (
-      selectedTemplate.cropHeight &&
-      templateMeta.width &&
-      templateMeta.height &&
-      selectedTemplate.cropHeight < templateMeta.height
-    ) {
+    if (detectedCropHeight < tHeight && detectedCropHeight > Math.floor(tHeight * 0.6)) {
       templatePipeline = templatePipeline.extract({
         left: 0,
         top: 0,
-        width: templateMeta.width,
-        height: selectedTemplate.cropHeight,
+        width: tWidth,
+        height: detectedCropHeight,
       });
     }
 
+    // Match the exact aspect ratio of the art area (1024 x ART_HEIGHT) instead of zooming/cropping with cover!
+    const BANNER_HEIGHT = 271;
+    const ART_HEIGHT = 1536 - BANNER_HEIGHT;
     const cleanTemplatePng = await templatePipeline
-      .resize(1024, 1536, { fit: "cover", position: "top" })
+      .resize(1024, ART_HEIGHT, { fit: "fill" })
+      .extend({
+        top: 0,
+        bottom: BANNER_HEIGHT,
+        left: 0,
+        right: 0,
+        background: { r: 255, g: 255, b: 255, alpha: 1 },
+      })
       .png({ compressionLevel: 8 })
       .toBuffer();
 
@@ -540,7 +565,7 @@ SEAMLESS STYLE, LIGHTING & ANATOMY INTEGRITY:
     });
 
     console.log(
-      `[Generate] Model="${imageModel}", Quality="${imageQuality}", Gender="${targetGender}", Template="${selectedTemplate.fileName}"`
+      `[Generate] Model="${imageModel}", Quality="${imageQuality}", Gender="${targetGender}", Template="${selectedTemplate.fileName}", Source=${tWidth}x${tHeight}, CropH=${detectedCropHeight}`
     );
 
     const supportsInputFidelity = imageModel.startsWith("gpt-image-1");
@@ -586,9 +611,8 @@ SEAMLESS STYLE, LIGHTING & ANATOMY INTEGRITY:
       throw new Error("No image returned from AI model.");
     }
 
-    // Resize to exact 1024x1536 (4x6 print ratio) and composite crisp official VFS Rendezvous 2026 white footer banner
-    const BANNER_HEIGHT = 217;
-    const ART_HEIGHT = 1536 - BANNER_HEIGHT;
+    // Composite crisp official VFS Rendezvous 2026 white footer banner onto the bottom BANNER_HEIGHT strip
+    // (preserving the exact top ART_HEIGHT framing with zero zoom/crop distortion)
     let finalPipeline = sharp(generatedBuffer).resize(1024, 1536, {
       fit: "cover",
       position: "top",
@@ -600,14 +624,7 @@ SEAMLESS STYLE, LIGHTING & ANATOMY INTEGRITY:
         .png()
         .toBuffer();
       finalPipeline = sharp(generatedBuffer)
-        .resize(1024, ART_HEIGHT, { fit: "cover", position: "center" })
-        .extend({
-          top: 0,
-          bottom: BANNER_HEIGHT,
-          left: 0,
-          right: 0,
-          background: { r: 255, g: 255, b: 255, alpha: 1 },
-        })
+        .resize(1024, 1536, { fit: "fill" })
         .composite([
           {
             input: bannerBuf,
