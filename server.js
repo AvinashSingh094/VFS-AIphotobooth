@@ -116,6 +116,15 @@ const TEMPLATE_META = {
     badge: "CHARACTER 04",
     cropHeight: 520,
   },
+  "10.jpg": {
+    id: "10.jpg",
+    gender: "male",
+    hasHelmet: false,
+    title: "Emerald Horizon Commander",
+    subtitle: "White-Titanium Chest Armor • Aurora Moonscape",
+    badge: "CHARACTER 05",
+    cropHeight: 520,
+  },
 };
 
 function getVFSTemplates() {

@@ -37,6 +37,15 @@ let templatesByGender = {
       subtitle: "Cobalt-Blue Spacesuit • Sapphire Ringed Planet",
       badge: "CHARACTER 04",
     },
+    {
+      id: "10.jpg",
+      fileName: "10.jpg",
+      gender: "male",
+      url: "/VFS/male/10.jpg?v=final",
+      title: "Emerald Horizon Commander",
+      subtitle: "White-Titanium Chest Armor • Aurora Moonscape",
+      badge: "CHARACTER 05",
+    },
   ],
   female: [
     {
